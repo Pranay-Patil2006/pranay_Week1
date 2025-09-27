@@ -165,8 +165,6 @@ yosys> write_verilog netlist.v
 - **GTKWave:** Waveform visualization
 - **Yosys:** Logic synthesis
 - **Sky130 PDK:** Process design kit with standard cell libraries
-
-This workflow provides a complete open-source RTL-to-gates design flow suitable for digital IC design and verification.
 </details> <details> <summary>Day 2 - Timing libs, Hierarchical vs Flat Synthesis and Efficient Flop Coding Styles</summary>
 Content for Day 2 goes here.
 
