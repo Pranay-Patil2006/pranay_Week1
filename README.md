@@ -166,7 +166,87 @@ yosys> write_verilog netlist.v
 - **Yosys:** Logic synthesis
 - **Sky130 PDK:** Process design kit with standard cell libraries
 </details> <details> <summary>Day 2 - Timing libs, Hierarchical vs Flat Synthesis and Efficient Flop Coding Styles</summary>
-Content for Day 2 goes here.
+# RTL Design and Synthesis Workshop Notes - Day 2
+
+# RTL Design and Synthesis Workshop Notes - Day 2
+
+## Table of Contents
+- [PVT in Liberty Files](#pvt-in-liberty-files)
+- [Cell Variants and Area](#cell-variants-and-area)
+- [Hierarchical Synthesis](#hierarchical-synthesis)
+- [Flip-Flop Reset Strategies](#flip-flop-reset-strategies)
+- [Yosys Flow for Sequential Logic](#yosys-flow-for-sequential-logic)
+- [Optimization Techniques](#optimization-techniques)
+- [Common Yosys Commands](#common-yosys-commands)
+
+## PVT in Liberty Files
+
+**PVT** stands for **Process, Voltage, and Temperature**. These three factors determine how silicon chips behave in real-world conditions:
+
+- **Process**: Variations in manufacturing (like doping, lithography) cause each chip to behave slightly differently
+- **Voltage**: Chips may be run at different supply voltages, affecting speed and power
+- **Temperature**: Performance and leakage change with temperature
+
+A typical liberty file name, like `sky130_fd_sc_hd__tt_025C_1v80.lib`, encodes these conditions:
+- `tt` = typical process
+- `025C` = 25°C
+- `1v80` = 1.80V supply
+
+This file contains detailed parameters for each cell (like AND, OR, etc.) under these conditions: leakage power, current, rise/fall times, slew rates, and more. Each cell may have several variants (e.g., `and1`, `and2`) with different drive strengths and areas. Larger area usually means higher speed and more leakage.
+
+## Cell Variants and Area
+
+- **Multiple cells** for the same logic function (e.g., `and1`, `and2`) differ mainly in transistor sizing
+- **Larger cells**: Faster, but use more area and power
+- **Smaller cells**: Slower, but save area and power
+
+## Hierarchical Synthesis
+
+**Stacking PMOS** transistors increases resistance and slows down the circuit. Synthesis tools prefer using NAND gates (which have parallel PMOS) over NOR gates (which have stacked PMOS) for efficiency.
+
+By default, `write_verilog` in Yosys preserves the module hierarchy. To flatten the design into a single module, use:
+
+```tcl
+yosys> flatten
+```
+
+**Submodule-level synthesis** is useful when you have multiple instances of the same module or want to break down a large design for easier synthesis and optimization:
+
+```tcl
+yosys> synth -top <sub_module_name>
+```
+
+## Flip-Flop Reset Strategies
+
+- **Asynchronous reset**: Flip-flop resets immediately when the reset signal changes, regardless of the clock
+- **Synchronous reset**: Flip-flop resets only on the clock edge, making timing analysis easier
+
+## Yosys Flow for Sequential Logic
+
+After synthesis, map flip-flops to library cells using your specific liberty file:
+
+```tcl
+yosys> dfflibmap -liberty /home/chippy/.volare/volare/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af/sky130B/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+```
+
+## Optimization Techniques
+
+- The synthesizer tries to minimize the number of gates and optimize for area, speed, and power
+- For example, multiplying by 2 is implemented as a left shift, not a full multiplier
+- If the synthesis does not use library cells, the `abc` command will not generate a mapped netlist. In that case, use `show` to view the netlist directly
+
+## Common Yosys Commands
+
+| Command | Purpose |
+|---------|---------|
+| `read_verilog <file.v>` | Read Verilog source |
+| `read_liberty -lib <libfile.lib>` | Read liberty file |
+| `synth -top <module>` | Synthesize top module |
+| `flatten` | Remove hierarchy |
+| `dfflibmap -liberty <libfile.lib>` | Map flip-flops to library |
+| `abc -liberty <libfile.lib>` | Technology mapping |
+| `write_verilog <out.v>` | Write synthesized netlist |
+| `show` | View netlist |
 
 </details> <details> <summary>Day 3 - Combinational and Sequential Optimizations</summary>
 Content for Day 3 goes here.
