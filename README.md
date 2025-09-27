@@ -166,7 +166,6 @@ yosys> write_verilog netlist.v
 - **Yosys:** Logic synthesis
 - **Sky130 PDK:** Process design kit with standard cell libraries
 </details> <details> <summary>Day 2 - Timing libs, Hierarchical vs Flat Synthesis and Efficient Flop Coding Styles</summary>
-# RTL Design and Synthesis Workshop Notes - Day 2
 
 # RTL Design and Synthesis Workshop Notes - Day 2
 
@@ -535,4 +534,4 @@ endgenerate
 ***
 
 
-</details> ```
+</details> 
