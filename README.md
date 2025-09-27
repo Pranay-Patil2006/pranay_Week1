@@ -4,10 +4,6 @@ week 1, documentation and notes of RISC-V SoC Tapeout workshop
 <details>
   <summary>Day 1 - Introduction to Verilog RTL Design and Synthesis</summary>
 
-# RTL Design and Synthesis Workshop Notes
-
-This repository contains comprehensive notes from a workshop covering RTL design simulation and synthesis using open-source tools.
-
 ## Table of Contents
 - [RTL Simulation](#rtl-simulation)
 - [Design and Testbench](#design-and-testbench)
