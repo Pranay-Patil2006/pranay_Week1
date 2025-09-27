@@ -251,8 +251,163 @@ yosys> dfflibmap -liberty /home/chippy/.volare/volare/sky130/versions/0fe599b2af
 </details> <details> <summary>Day 3 - Combinational and Sequential Optimizations</summary>
 
 
+# Logic Optimization and Synthesis – Workshop Notes
+
+## Table of Contents
+- [Combinational Optimization](#combinational-optimization)
+- [Sequential Logic Optimization](#sequential-logic-optimization)
+- [Unused Output Optimization](#unused-output-optimization)
+- [Gate-Level Simulation (GLS) and Synthesis-Simulation Mismatch](#gate-level-simulation-gls-and-synthesis-simulation-mismatch)
+
+***
+
+## Combinational Optimization
+
+Combinational logic can be optimized in several ways to reduce area, power, and delay:
+
+1. **Constant Propagation**
+   - If an input to a logic gate is a constant, the output can often be simplified. For example, if one input to an AND gate is 0, the output is always 0.
+2. **Boolean Simplification**
+   - Techniques like Karnaugh maps (K-maps) or the Quine–McCluskey algorithm are used to minimize Boolean expressions, reducing the number of gates and logic levels.
+
+***
+
+## Sequential Logic Optimization
+
+**Basic Techniques:**
+- **Sequential Constant Propagation:**
+  - If a flip-flop's input is always a constant (e.g., D=0 for a DFF), its output is fixed and the flip-flop can be removed, simplifying the circuit.
+
+**Advanced Techniques:**
+- **State Optimization:**
+  - Remove unused or redundant states in state machines to reduce complexity.
+- **Cloning:**
+  - Duplicate registers closer to where their outputs are needed to reduce delay.
+- **Retiming:**
+  - Move flip-flops across combinational logic to balance delays and potentially increase the maximum clock frequency.
+
+**Example:**
+- If D=0 for a DFF, Q will always be 0, so the DFF and any logic depending on Q can be eliminated. However, if an asynchronous set or reset is present, optimization may not be possible unless the output is truly constant.
+
+***
+
+
+1. **UpCounter (3-bit)**
+   - If only `q` is used, the other outputs are unused and can be removed from the design. For example, if `q = count`, only the LSB is needed, so a single flip-flop is sufficient (as seen in the synthesis report).
+   - If `q = count[2:0] == 3'b100`, all bits are needed, so three flip-flops are required and no optimization is possible.
+   - Any logic or storage not affecting the output is optimized away by the synthesis tool.
+
+***
+## Unused Output Optimization 
+
+1. **UpCounter (3bit)**
+   we are only usinf the q[0] the other outputs are unused thus they neednot be present in the design.q=count[0] -> depend on msb only.
+   In q=count[2:0]==3'b100 depend on all the bits.
+   In case 1 the bit is toggled in all cycle.-> one flop is enough which we see in the synthesis report. the dff output is take and fed back into the d which toggles it evervy cycle.
+   Any LOGIC that doesnt used all the outputs is OPTIMIZED.
+   In case 2 three flop is needed which we see in the synthesis report. So the Output is not Optimized.
+
+
+
+
 </details> <details> <summary>Day 4 - GLS, Blocking vs Non-blocking and Synthesis-Simulation Mismatch</summary>
-Content for Day 4 goes here.
+
+# Logic Optimization and Synthesis – Workshop Notes
+
+## Table of Contents
+- [Combinational Optimization](#combinational-optimization)
+- [Sequential Logic Optimization](#sequential-logic-optimization)
+- [Unused Output Optimization](#unused-output-optimization)
+- [Gate-Level Simulation (GLS) and Synthesis-Simulation Mismatch](#gate-level-simulation-gls-and-synthesis-simulation-mismatch)
+
+***
+
+## Combinational Optimization
+
+Combinational logic can be optimized in several ways to reduce area, power, and delay:
+
+1. **Constant Propagation**
+   - If an input to a logic gate is a constant, the output can often be simplified. For example, if one input to an AND gate is 0, the output is always 0.
+2. **Boolean Simplification**
+   - Techniques like Karnaugh maps (K-maps) or the Quine–McCluskey algorithm are used to minimize Boolean expressions, reducing the number of gates and logic levels.
+
+***
+
+## Sequential Logic Optimization
+
+**Basic Techniques:**
+- **Sequential Constant Propagation:**
+  - If a flip-flop's input is always a constant (e.g., D=0 for a DFF), its output is fixed and the flip-flop can be removed, simplifying the circuit.
+
+**Advanced Techniques:**
+- **State Optimization:**
+  - Remove unused or redundant states in state machines to reduce complexity.
+- **Cloning:**
+  - Duplicate registers closer to where their outputs are needed to reduce delay.
+- **Retiming:**
+  - Move flip-flops across combinational logic to balance delays and potentially increase the maximum clock frequency.
+
+**Example:**
+- If D=0 for a DFF, Q will always be 0, so the DFF and any logic depending on Q can be eliminated. However, if an asynchronous set or reset is present, optimization may not be possible unless the output is truly constant.
+
+***
+
+
+1. **UpCounter (3-bit)**
+   - If only `q` is used, the other outputs are unused and can be removed from the design. For example, if `q = count`, only the LSB is needed, so a single flip-flop is sufficient (as seen in the synthesis report).
+   - If `q = count[2:0] == 3'b100`, all bits are needed, so three flip-flops are required and no optimization is possible.
+   - Any logic or storage not affecting the output is optimized away by the synthesis tool.
+
+***
+
+## Gate-Level Simulation (GLS) and Synthesis-Simulation Mismatch
+
+### What is GLS?
+Gate-Level Simulation (GLS) is the process of simulating the synthesized netlist (post-synthesis) to verify that the design still functions as intended. The netlist is logically equivalent to the RTL, so the same testbench can be used.
+
+### Why Run GLS?
+1. **Verify logical correctness after synthesis**
+2. **Ensure timing constraints are met**
+
+### GLS with Icarus Verilog
+- The netlist is now a gate-level model. The simulator must be aware of the standard cells used. The rest of the simulation flow remains the same, but the GLS model can be timing-aware.
+
+### What Happens in GLS?
+- Example RTL: `assign y = (a & b) | c;`
+- Example Netlist:
+  ```verilog
+  and a1(m, a, b);
+  or o1(y, c, m);
+  ```
+- The gate-level model includes definitions for gates like AND and OR, which may include timing information. This allows both functional and timing verification.
+- The simulator only evaluates the design when there is a change in the inputs.
+
+### Why Validate Functionality Again?
+Even if the RTL and netlist are logically equivalent, mismatches can occur due to:
+- **Missing sensitivity lists**: For example, using `always @(sel)` instead of `always @(*)` can cause the simulator to miss changes on other inputs, leading to incorrect behavior (like unintended latches).
+- **Blocking vs. Non-Blocking Assignments**:
+  - `=` (blocking): Executes statements in order, like C code.
+  - `<=` (non-blocking): Schedules assignments to happen in parallel, regardless of order.
+
+#### Example: Shift Register
+- **Blocking:**
+  ```verilog
+  q = q0;
+  q0 = d;
+  ```
+  Here, `q0` is assigned to `q`, then `d` is assigned to `q0`. This works as expected.
+- **Non-Blocking:**
+  ```verilog
+  q0 <= d;
+  q <= q0;
+  ```
+  Both assignments happen in parallel, so the order doesn't matter and the correct behavior is achieved.
+
+#### Caveats
+- If you use a variable before it is updated in the same always block, you might unintentionally create a latch or a flop, depending on the assignment type and order.
+- Even if two codes produce the same output in RTL simulation, they might behave differently after synthesis. That's why GLS is essential to catch these mismatches.
+
+
 
 </details> <details> <summary>Day 5 - Introduction to DFT</summary>
 
@@ -379,11 +534,5 @@ endgenerate
 
 ***
 
-
-</details> <details> <summary>Day 6 - Introduction to Logic Synthesis</summary>
-Content for Day 6 goes here.
-
-</details> <details> <summary>Day 7 - Basics of Static Timing Analysis (STA)</summary>
-Content for Day 7 goes here.
 
 </details> ```
