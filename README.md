@@ -49,13 +49,13 @@ The simulation flow follows these steps:
 ### Commands:
 ```bash
 # Compile design and testbench
-iverilog design_file.v testbench_file.v
+iverilog input_design_file.v input_test_bench_file.v
 
 # Execute simulation
 ./a.out
 
-# View waveforms (generates .vcd file)
-gtkwave testbench_file.vcd
+# View waveforms (generates input_test_bench_file.vcd)
+gtkwave input_test_bench_file.vcd
 ```
 
 **VCD File:** Value Change Dump file containing signal transitions over time for waveform analysis.
@@ -104,7 +104,7 @@ Where:
 
 ### Maximum Frequency
 ```
-f_max = 1/T_clk_min
+f_max = 1/T_clk
 ```
 
 ### Cell Selection Strategy
@@ -138,13 +138,13 @@ f_max = 1/T_clk_min
 yosys> read_verilog good_mux.v
 
 # Read liberty file
-yosys> read_liberty -lib /path/to/sky130_fd_sc_hd__tt_025C_1v80.lib
+yosys> read_liberty -lib /home/chippy/.volare/volare/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af/sky130B/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
 
 # Synthesize design (specify top module)
 yosys> synth -top good_mux
 
 # Technology mapping using ABC
-yosys> abc -liberty /path/to/sky130_fd_sc_hd__tt_025C_1v80.lib
+yosys> abc -liberty /home/chippy/.volare/volare/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af/sky130B/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
 
 # Display synthesized netlist
 yosys> show
@@ -157,7 +157,7 @@ yosys> write_verilog netlist.v
 - The same testbench verifies both RTL and synthesized netlist
 - Netlist represents the true gate-level implementation
 - ABC command performs technology mapping to standard cells
-- Liberty file path should point to the appropriate process corner
+- The liberty file used is the Sky130 PDK standard cell library at typical corner (tt_025C_1v80)
 
 ## Workshop Tools Summary
 
