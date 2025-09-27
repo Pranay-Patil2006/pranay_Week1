@@ -249,13 +249,136 @@ yosys> dfflibmap -liberty /home/chippy/.volare/volare/sky130/versions/0fe599b2af
 | `show` | View netlist |
 
 </details> <details> <summary>Day 3 - Combinational and Sequential Optimizations</summary>
-Content for Day 3 goes here.
+
 
 </details> <details> <summary>Day 4 - GLS, Blocking vs Non-blocking and Synthesis-Simulation Mismatch</summary>
 Content for Day 4 goes here.
 
 </details> <details> <summary>Day 5 - Introduction to DFT</summary>
-Content for Day 5 goes here.
+
+## If-Else and Elif Ladder in Verilog
+
+The `if-else` and `else if` ("elif ladder") constructs in Verilog implement conditional logic with **priority**. In hardware, these synthesize into a chain of multiplexers:
+
+- The **first** `if` condition has the highest priority. If it is true, its block executes and the rest are skipped.
+- If none of the conditions are true, the `else` (default) block executes.
+
+**Example:**
+```verilog
+always @(*) begin
+  if (cond1)
+    y = a;
+  else if (cond2)
+    y = b;
+  else
+    y = E;
+end
+```
+
+**Hardware Analogy:**
+- This is like a nested multiplexer: the first true condition determines the output.
+- If all conditions are false, the default value (`E`) is selected.
+
+***
+
+## Inferred Latches: Dangers and Prevention
+
+**Inferred latches** occur when not all possible conditions assign a value to an output in a combinational always block. This causes the synthesis tool to create a latch (memory element) to "remember" the previous value.
+
+**Example of Inferred Latch:**
+```verilog
+always @(*) begin
+  if (cond1)
+    y = a;
+  else if (cond2)
+    y = b;
+  // No else: y keeps its previous value (latch inferred)
+end
+```
+
+**Why is this a problem?**
+- Latches can cause unpredictable behavior and are usually not intended in combinational logic.
+
+**Best Practice:**
+- Always include an `else` or `default` case to assign all outputs in every branch, unless you specifically want a latch (e.g., in counters).
+- If you want to "hold" the value, use `y = y;` in the `else` block.
+
+***
+
+## Case Statements: Usage and Caveats
+
+The `case` statement is used for multi-way branching, similar to a multiplexer with many inputs.
+
+**Syntax Example:**
+```verilog
+always @(*) begin
+  case (sel)
+    2'b00: y = a;
+    2'b01: y = b;
+    2'b10: y = c;
+    default: y = d;
+  endcase
+end
+```
+
+**Key Points:**
+- The variable assigned in a `case` statement should be declared as `reg`.
+- If not all possible values of the selector are covered and there is no `default`, inferred latches may occur.
+- If you have multiple outputs, you must assign *all* outputs in *every* case branch. Otherwise, latches may still be inferred, even with a `default`.
+- `case` statements do not have priority: all cases are checked in parallel, and only one should match.
+- Overlapping cases are not allowed.
+
+**Case vs. If-Else:**
+- Use `if-else` for priority logic.
+- Use `case` for one-hot or mutually exclusive conditions.
+
+***
+
+## Loops in Verilog
+
+Verilog supports two main types of loops: for use in always blocks (behavioral) and for hardware instantiation (generate).
+
+### Always Block For Loops
+- Used inside `always` blocks for repeated assignments or calculations.
+- Does **not** create hardware loops; instead, it unrolls into repeated logic.
+- Useful for things like ripple adders or wide multiplexers.
+
+**Example:**
+```verilog
+always @(*) begin
+  for (i = 0; i < 8; i = i + 1)
+    sum[i] = a[i] ^ b[i];
+end
+```
+
+### Generate For Loops
+- Used outside `always` blocks to instantiate multiple hardware modules or logic blocks.
+- Cannot be used inside `always` blocks.
+- Common for creating arrays of gates, registers, etc.
+
+**Example:**
+```verilog
+genvar i;
+generate
+  for (i = 0; i < 4; i = i + 1) begin : and_gen
+    and u_and (out[i], in1[i], in2[i]);
+  end
+endgenerate
+```
+
+***
+
+## Summary Table: Best Practices
+
+| Construct         | Best Practice                                      |
+|------------------|----------------------------------------------------|
+| if-else ladder   | Always include an else/default branch              |
+| case statement   | Cover all cases and assign all outputs in each     |
+| always for loop  | Use for repeated assignments, not hardware loops   |
+| generate for     | Use for hardware instantiation, not in always      |
+
+***
+
 
 </details> <details> <summary>Day 6 - Introduction to Logic Synthesis</summary>
 Content for Day 6 goes here.
